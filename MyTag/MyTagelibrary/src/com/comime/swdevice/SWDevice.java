@@ -95,8 +95,8 @@ public class SWDevice {
 	public void connect() {
 		if (bluetoothDevice != null) {
 			if (mBluetoothGatt != null) {
-				mBluetoothGatt.close();
 				mBluetoothGatt.disconnect();
+				mBluetoothGatt.close();
 				mBluetoothGatt = null;
 			}
 			mBluetoothGatt = bluetoothDevice.connectGatt(this.context, false,
@@ -113,9 +113,8 @@ public class SWDevice {
 
 		if (bluetoothDevice != null) {
 			if (mBluetoothGatt != null) {
-				mBluetoothGatt.close();
 				mBluetoothGatt.disconnect();
-
+				mBluetoothGatt.close();
 				mBluetoothGatt = null;
 			}
 			mBluetoothGatt = bluetoothDevice.connectGatt(this.context, false,
@@ -143,8 +142,8 @@ public class SWDevice {
 	 */
 	public void remove() {
 		if (mBluetoothGatt != null) {
-			mBluetoothGatt.close();
 			mBluetoothGatt.disconnect();
+			mBluetoothGatt.close();
 			mBluetoothGatt = null;
 		}
 		deviceStatus = DEVICE_STATUS_DISCONNECTED;
@@ -198,10 +197,15 @@ public class SWDevice {
 		public void onConnectionStateChange(BluetoothGatt gatt, int status,
 				int newState) {
 			super.onConnectionStateChange(gatt, status, newState);
-			if (newState == BluetoothGatt.STATE_CONNECTED) {
-				gatt.discoverServices();// Search service
-			} else if (newState == BluetoothGatt.STATE_DISCONNECTED) {// Disconnect
-				deviceStatus = DEVICE_STATUS_DISCONNECTED;
+			if (status == BluetoothGatt.GATT_SUCCESS) {
+				if (newState == BluetoothGatt.STATE_CONNECTED) {
+					gatt.discoverServices();// Search service
+				} else if (newState == BluetoothGatt.STATE_DISCONNECTED) {// Disconnect
+					deviceStatus = DEVICE_STATUS_DISCONNECTED;
+					deviceListener.onDisconnected(tag, bluetoothDevice);
+				}
+			} else {// Disconnect
+				remove();
 				deviceListener.onDisconnected(tag, bluetoothDevice);
 			}
 		}
@@ -282,7 +286,7 @@ public class SWDevice {
 			return;
 		}
 		alertLevel.setValue(data);
-		alertLevel.setWriteType(1);
+		alertLevel.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
 		this.mBluetoothGatt.writeCharacteristic(alertLevel);
 	}
 
